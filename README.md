@@ -1,5 +1,5 @@
 # Map Parser
-Convert vphys file to a '.tri' file (a list of vec3 point, each 3 points repersents a triangle) \n
+Convert vphys file to a '.tri' file (a list of vec3 point, each 3 points repersents a triangle) \
 Reason why I do that is vk3 parser takes lots memory to save the '.vphys' text (especially for dust2)
 
 ## Use
