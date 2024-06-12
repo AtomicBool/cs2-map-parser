@@ -16,8 +16,8 @@ typedef struct Triangle {
 
 ## File size
 
-|  Map Name  | .vphys  | .tri |
-|  ----  | | ---- | | ---- |
+|  Map Name | .vphys | .tri |
+| ---- | ---- | ---- |
 | inferno | 674MB | 307MB |
 | overpass | 113MB | 57.1MB |
 | ancient | 370MB | 22.1MB |
