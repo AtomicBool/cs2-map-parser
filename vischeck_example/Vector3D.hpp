@@ -1,5 +1,4 @@
 #pragma once
-#include "Vector2D.hpp"
 
 struct Vector3D {
     float x, y, z;
