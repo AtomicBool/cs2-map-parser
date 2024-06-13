@@ -38,8 +38,9 @@ typedef struct Triangle {
 ```
 
 ## Coding Visibility Check
-A simple example is in `vischeck_example\`
-GPT helped with KD-tree and slabs/moller-trumbore algo
+A simple example is in `vischeck_example\` \
+GPT helped with KD-tree and slabs/moller-trumbore algo\
+Otherwise, it takes >1ms to process a path for inferno\
 
 ## TODO
 Nothing.
