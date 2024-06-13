@@ -20,13 +20,12 @@ int main()
         if (map.is_visible(r_start, r_end)) {
             cout << "INVISIBLE" << endl;
             auto i_end = std::chrono::steady_clock::now();
-            cout << "TimeCost" << std::chrono::duration<double, std::milli>(i_end - time_begin).count() << "ms" << endl;
+            cout << "TimeCost" << 1000/std::chrono::duration<double, std::milli>(i_end - time_begin).count() << "fps" << endl;
         }
         else {
             auto time_end = std::chrono::steady_clock::now();
             cnt++;
-            cout << "Count:" << cnt << " TimeCost" << std::chrono::duration<double, std::milli>(time_end - time_begin).count() << "ms" << endl;
-            break;
+            cout << "Count:" << cnt << " TimeCost" << 1000/std::chrono::duration<double, std::milli>(time_end - time_begin).count() << "fps" << endl;
         }
     }
 
