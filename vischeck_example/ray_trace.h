@@ -3,7 +3,7 @@
 #include <fstream>
 #include <chrono>
 #include <algorithm>
-#include "Vector3D.hpp"
+#include "vector.h"
 
 // credits tni & learn_more (www.unknowncheats.me/forum/3868338-post34.html)
 #define INRANGE(x,a,b)		(x >= a && x <= b) 
@@ -11,15 +11,15 @@
 #define get_byte( x )		(getBits(x[0]) << 4 | getBits(x[1]))
 
 typedef struct Triangle {
-    Vector3D p1, p2, p3;
+    Vector p1, p2, p3;
 };
 
 struct BoundingBox {
-    Vector3D min, max;
+    Vector min, max;
 
-    bool intersect(const Vector3D& ray_origin, const Vector3D& ray_end) const { //Slabs method
-        Vector3D dir = ray_end.Subtract(ray_origin);
-        dir = dir.Normalize(); // È·±£·½ÏòÏòÁ¿ÊÇµ¥Î»ÏòÁ¿
+    bool intersect(const Vector& ray_origin, const Vector& ray_end) const { //Slabs method
+        Vector dir = ray_end - ray_origin;
+        dir = dir.Normalize(); // ç¡®ä¿æ–¹å‘å‘é‡æ˜¯å•ä½å‘é‡
 
         float t1 = (min.x - ray_origin.x) / dir.x;
         float t2 = (max.x - ray_origin.x) / dir.x;
@@ -31,12 +31,12 @@ struct BoundingBox {
         float tmin = std::max(std::max(std::min(t1, t2), std::min(t3, t4)), std::min(t5, t6));
         float tmax = std::min(std::min(std::max(t1, t2), std::max(t3, t4)), std::max(t5, t6));
 
-        // Èç¹û tmax < 0£¬¹âÏßÓëºĞ×ÓÏà½»ÔÚ¹âÏßµÄ·´·½ÏòÉÏ£¬ËùÒÔ²»Ïà½»
+        // å¦‚æœ tmax < 0ï¼Œå…‰çº¿ä¸ç›’å­ç›¸äº¤åœ¨å…‰çº¿çš„åæ–¹å‘ä¸Šï¼Œæ‰€ä»¥ä¸ç›¸äº¤
         if (tmax < 0) {
             return false;
         }
 
-        // Èç¹û tmin > tmax£¬¹âÏß²»»á´©¹ıºĞ×Ó£¬ËùÒÔ²»Ïà½»
+        // å¦‚æœ tmin > tmaxï¼Œå…‰çº¿ä¸ä¼šç©¿è¿‡ç›’å­ï¼Œæ‰€ä»¥ä¸ç›¸äº¤
         if (tmin > tmax) {
             return false;
         }
@@ -52,44 +52,44 @@ struct KDNode {
     int axis;
 };
 
-bool ray_intersects_triangle(Vector3D p1, Vector3D p2, Vector3D p3, Vector3D ray_origin, Vector3D ray_end) {
+bool ray_intersects_triangle(Vector p1, Vector p2, Vector p3, Vector ray_origin, Vector ray_end) {
     const float EPSILON = 0.0000001;
-    Vector3D edge1, edge2, h, s, q;
+    Vector edge1, edge2, h, s, q;
     float a, f, u, v, t;
-    edge1 = p2.Subtract(p1);
-    edge2 = p3.Subtract(p1);
-    h = CrossProduct(ray_end.Subtract(ray_origin), edge2);
-    a = edge1.DotProduct(h);
+    edge1 = p2 - p1;
+    edge2 = p3 - p1;
+    h = CrossProduct(ray_end - ray_origin, edge2);
+    a = edge1.Dot(h);
 
     if (a > -EPSILON && a < EPSILON)
-        return false;    // ¹âÏßÓëÈı½ÇĞÎÆ½ĞĞ£¬²»Ïà½»
+        return false;    // å…‰çº¿ä¸ä¸‰è§’å½¢å¹³è¡Œï¼Œä¸ç›¸äº¤
 
     f = 1.0 / a;
-    s = ray_origin.Subtract(p1);
-    u = f * s.DotProduct(h);
+    s = ray_origin - p1;
+    u = f * s.Dot(h);
 
     if (u < 0.0 || u > 1.0)
         return false;
 
     q = CrossProduct(s, edge1);
-    v = f * (ray_end.Subtract(ray_origin)).DotProduct(q);
+    v = f * (ray_end - ray_origin).Dot(q);
 
     if (v < 0.0 || u + v > 1.0)
         return false;
 
-    // ¼ÆËã t À´ÕÒµ½½»µã
-    t = f * edge2.DotProduct(q);
+    // è®¡ç®— t æ¥æ‰¾åˆ°äº¤ç‚¹
+    t = f * edge2.Dot(q);
 
-    if (t > EPSILON && t < 1.0) // È·±£ t ÔÚ 0 ºÍ 1 Ö®¼ä£¬±íÊ¾½»µãÔÚÏß¶ÎÉÏ
+    if (t > EPSILON && t < 1.0) // ç¡®ä¿ t åœ¨ 0 å’Œ 1 ä¹‹é—´ï¼Œè¡¨ç¤ºäº¤ç‚¹åœ¨çº¿æ®µä¸Š
         return true;
 
-    return false; // ÕâÒâÎ¶×Å¹âÏßÓëÈı½ÇĞÎ²»Ïà½»»òÕßÔÚÈı½ÇĞÎµÄ±ß½çÉÏ
+    return false; // è¿™æ„å‘³ç€å…‰çº¿ä¸ä¸‰è§’å½¢ä¸ç›¸äº¤æˆ–è€…åœ¨ä¸‰è§’å½¢çš„è¾¹ç•Œä¸Š
 }
 
-bool rayIntersectsKDTree(KDNode* node, const Vector3D& ray_origin, const Vector3D& ray_end) {
+bool rayIntersectsKDTree(KDNode* node, const Vector& ray_origin, const Vector& ray_end) {
     if (node == nullptr) return false;
 
-    Vector3D ray_direction = ray_end.Subtract(ray_origin);
+    Vector ray_direction = ray_end - ray_origin;
     if (!node->bbox.intersect(ray_origin, ray_direction)) {
         return false;
     }
@@ -112,7 +112,7 @@ bool rayIntersectsKDTree(KDNode* node, const Vector3D& ray_origin, const Vector3
 
 BoundingBox calculateBoundingBox(const std::vector<Triangle>& triangles) {
     BoundingBox box;
-    // ³õÊ¼»¯ÎªµÚÒ»¸öÈı½ÇĞÎµÄµÚÒ»¸öµã
+    // åˆå§‹åŒ–ä¸ºç¬¬ä¸€ä¸ªä¸‰è§’å½¢çš„ç¬¬ä¸€ä¸ªç‚¹
     box.min = box.max = triangles[0].p1;
     for (const auto& tri : triangles) {
         for (const auto& p : { tri.p1, tri.p2, tri.p3 }) {
@@ -132,7 +132,7 @@ KDNode* buildKDTree(std::vector<Triangle>& triangles, int depth = 0) {
 
     KDNode* node = new KDNode();
     node->bbox = calculateBoundingBox(triangles);
-    node->axis = depth % 3; // ·Ö¸îÖáÊÇ¸ù¾İÉî¶ÈÑ¡ÔñµÄ
+    node->axis = depth % 3; // åˆ†å‰²è½´æ˜¯æ ¹æ®æ·±åº¦é€‰æ‹©çš„
 
     if (triangles.size() <= 3) {
         node->triangle = triangles;
@@ -140,12 +140,12 @@ KDNode* buildKDTree(std::vector<Triangle>& triangles, int depth = 0) {
     }
 
     auto comparator = [axis = node->axis](const Triangle& a, const Triangle& b) {
-        // ±È½Ïº¯ÊıÊ¹ÓÃ node->axis À´»ñÈ¡µ±Ç°µÄ·Ö¸îÖá
+        // æ¯”è¾ƒå‡½æ•°ä½¿ç”¨ node->axis æ¥è·å–å½“å‰çš„åˆ†å‰²è½´
         switch (axis) {
-        case 0: return a.p1.x < b.p1.x; // xÖá
-        case 1: return a.p1.y < b.p1.y; // yÖá
-        case 2: return a.p1.z < b.p1.z; // zÖá
-        default: return false; // ·ÀÖ¹Î´¶¨ÒåĞĞÎª
+        case 0: return a.p1.x < b.p1.x; // xè½´
+        case 1: return a.p1.y < b.p1.y; // yè½´
+        case 2: return a.p1.z < b.p1.z; // zè½´
+        default: return false; // é˜²æ­¢æœªå®šä¹‰è¡Œä¸º
         }
     };
 
