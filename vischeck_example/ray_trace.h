@@ -37,10 +37,6 @@ std::vector<Ty> bytes_to_vec(const std::string& bytes)
     return vec;
 }
 
-typedef struct Triangle {
-    Vector p1, p2, p3;
-};
-
 struct BoundingBox {
     Vector min, max;
 
@@ -72,6 +68,44 @@ struct BoundingBox {
     }
 };
 
+struct Triangle {
+    Vector p1, p2, p3;
+
+    bool intersect(Vector ray_origin, Vector ray_end) const {
+        const float EPSILON = 0.0000001f;
+        Vector edge1, edge2, h, s, q;
+        float a, f, u, v, t;
+        edge1 = p2 - p1;
+        edge2 = p3 - p1;
+        h = CrossProduct(ray_end - ray_origin, edge2);
+        a = edge1.Dot(h);
+
+        if (a > -EPSILON && a < EPSILON)
+            return false;    // 光线与三角形平行，不相交
+
+        f = 1.0 / a;
+        s = ray_origin - p1;
+        u = f * s.Dot(h);
+
+        if (u < 0.0 || u > 1.0)
+            return false;
+
+        q = CrossProduct(s, edge1);
+        v = f * (ray_end - ray_origin).Dot(q);
+
+        if (v < 0.0 || u + v > 1.0)
+            return false;
+
+        // 计算 t 来找到交点
+        t = f * edge2.Dot(q);
+
+        if (t > EPSILON && t < 1.0) // 确保 t 在 0 和 1 之间，表示交点在线段上
+            return true;
+
+        return false; // 这意味着光线与三角形不相交或者在三角形的边界上
+    }
+};
+
 struct KDNode {
     BoundingBox bbox;
     std::vector<Triangle> triangle;
@@ -90,40 +124,6 @@ struct KDNode {
     }
 };
 
-bool ray_intersects_triangle(Vector p1, Vector p2, Vector p3, Vector ray_origin, Vector ray_end) {
-    const float EPSILON = 0.0000001f;
-    Vector edge1, edge2, h, s, q;
-    float a, f, u, v, t;
-    edge1 = p2 - p1;
-    edge2 = p3 - p1;
-    h = CrossProduct(ray_end - ray_origin, edge2);
-    a = edge1.Dot(h);
-
-    if (a > -EPSILON && a < EPSILON)
-        return false;    // 光线与三角形平行，不相交
-
-    f = 1.0 / a;
-    s = ray_origin - p1;
-    u = f * s.Dot(h);
-
-    if (u < 0.0 || u > 1.0)
-        return false;
-
-    q = CrossProduct(s, edge1);
-    v = f * (ray_end - ray_origin).Dot(q);
-
-    if (v < 0.0 || u + v > 1.0)
-        return false;
-
-    // 计算 t 来找到交点
-    t = f * edge2.Dot(q);
-
-    if (t > EPSILON && t < 1.0) // 确保 t 在 0 和 1 之间，表示交点在线段上
-        return true;
-
-    return false; // 这意味着光线与三角形不相交或者在三角形的边界上
-}
-
 bool rayIntersectsKDTree(KDNode* node, const Vector& ray_origin, const Vector& ray_end) {
     if (node == nullptr) return false;
 
@@ -135,7 +135,7 @@ bool rayIntersectsKDTree(KDNode* node, const Vector& ray_origin, const Vector& r
     if (node->triangle.size() > 0) {
         bool hit = false;
         for (const auto& tri : node->triangle) {
-            if (ray_intersects_triangle(tri.p1, tri.p2, tri.p3, ray_origin, ray_end)) {
+            if (tri.intersect(ray_origin, ray_end)) {
                 hit = true;
             }
         }
