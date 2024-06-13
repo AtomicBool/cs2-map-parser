@@ -14,12 +14,21 @@
     <ClCompile Include="ray_trace.cpp">
       <Filter>Source</Filter>
     </ClCompile>
+    <ClCompile Include="handle.cpp">
+      <Filter>Header</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ray_trace.h">
       <Filter>Header</Filter>
     </ClInclude>
     <ClInclude Include="vector.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="handle.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="offsets.h">
       <Filter>Header</Filter>
     </ClInclude>
   </ItemGroup>

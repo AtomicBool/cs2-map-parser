@@ -127,8 +127,7 @@ struct KDNode {
 bool rayIntersectsKDTree(KDNode* node, const Vector& ray_origin, const Vector& ray_end) {
     if (node == nullptr) return false;
 
-    Vector ray_direction = ray_end - ray_origin;
-    if (!node->bbox.intersect(ray_origin, ray_direction)) {
+    if (!node->bbox.intersect(ray_origin, ray_end)) {
         return false;
     }
 
@@ -179,12 +178,22 @@ KDNode* buildKDTree(std::vector<Triangle>& triangles, int depth = 0) {
 
     auto comparator = [axis = node->axis](const Triangle& a, const Triangle& b) {
         // 比较函数使用 node->axis 来获取当前的分割轴
-        switch (axis) {
-        case 0: return a.p1.x < b.p1.x; // x轴
-        case 1: return a.p1.y < b.p1.y; // y轴
-        case 2: return a.p1.z < b.p1.z; // z轴
-        default: return false; // 防止未定义行为
-        }
+        float a_center, b_center;
+            switch (axis) {
+                case 0:
+                    a_center = (a.p1.x + a.p2.x + a.p3.x) / 3;
+                    b_center = (b.p1.x + b.p2.x + b.p3.x) / 3;
+                    break;
+                case 1:
+                    a_center = (a.p1.y + a.p2.y + a.p3.y) / 3;
+                    b_center = (b.p1.y + b.p2.y + b.p3.y) / 3;
+                    break;
+                case 2:
+                    a_center = (a.p1.z + a.p2.z + a.p3.z) / 3;
+                    b_center = (b.p1.z + b.p2.z + b.p3.z) / 3;
+                    break;
+            }
+            return a_center < b_center;
         };
 
     std::nth_element(triangles.begin(), triangles.begin() + triangles.size() / 2, triangles.end(), comparator);
