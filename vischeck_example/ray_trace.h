@@ -10,6 +10,33 @@
 #define getBits( x )		(INRANGE(x,'0','9') ? (x - '0') : ((x&(~0x20)) - 'A' + 0xa))
 #define get_byte( x )		(getBits(x[0]) << 4 | getBits(x[1]))
 
+template <typename Ty>
+std::vector<Ty> bytes_to_vec(const std::string& bytes)
+{
+    const auto num_bytes = bytes.size() / 3;
+    const auto num_elements = num_bytes / sizeof(Ty);
+
+    std::vector<Ty> vec;
+    vec.resize(num_elements + 1);
+
+    const char* p1 = bytes.c_str();
+    uint8_t* p2 = reinterpret_cast<uint8_t*>(vec.data());
+    while (*p1 != '\0')
+    {
+        if (*p1 == ' ')
+        {
+            ++p1;
+        }
+        else
+        {
+            *p2++ = get_byte(p1);
+            p1 += 2;
+        }
+    }
+
+    return vec;
+}
+
 typedef struct Triangle {
     Vector p1, p2, p3;
 };
@@ -48,12 +75,23 @@ struct BoundingBox {
 struct KDNode {
     BoundingBox bbox;
     std::vector<Triangle> triangle;
-    KDNode* left, * right;
+    KDNode* left, * right = nullptr;
     int axis;
+
+    void deleteKDTree(KDNode* node) {
+        if (node == nullptr) return;
+
+        // 递归地删除子节点
+        deleteKDTree(node->left);
+        deleteKDTree(node->right);
+
+        // 删除当前节点
+        delete node;
+    }
 };
 
 bool ray_intersects_triangle(Vector p1, Vector p2, Vector p3, Vector ray_origin, Vector ray_end) {
-    const float EPSILON = 0.0000001;
+    const float EPSILON = 0.0000001f;
     Vector edge1, edge2, h, s, q;
     float a, f, u, v, t;
     edge1 = p2 - p1;
@@ -147,7 +185,7 @@ KDNode* buildKDTree(std::vector<Triangle>& triangles, int depth = 0) {
         case 2: return a.p1.z < b.p1.z; // z轴
         default: return false; // 防止未定义行为
         }
-    };
+        };
 
     std::nth_element(triangles.begin(), triangles.begin() + triangles.size() / 2, triangles.end(), comparator);
 
@@ -160,29 +198,32 @@ KDNode* buildKDTree(std::vector<Triangle>& triangles, int depth = 0) {
     return node;
 }
 
-template <typename Ty>
-std::vector<Ty> bytes_to_vec(const std::string& bytes)
-{
-    const auto num_bytes = bytes.size() / 3;
-    const auto num_elements = num_bytes / sizeof(Ty);
+class map_loader {
+public:
+    std::vector<Triangle> triangles;
+    KDNode* kd_tree;
 
-    std::vector<Ty> vec;
-    vec.resize(num_elements + 1);
-
-    const char* p1 = bytes.c_str();
-    uint8_t* p2 = reinterpret_cast<uint8_t*>(vec.data());
-    while (*p1 != '\0')
-    {
-        if (*p1 == ' ')
-        {
-            ++p1;
-        }
-        else
-        {
-            *p2++ = get_byte(p1);
-            p1 += 2;
-        }
+    void unload() {
+        kd_tree->deleteKDTree(kd_tree);
     }
 
-    return vec;
-}
+    void load_map(std::string map_name) {
+        auto begin = std::chrono::steady_clock::now();
+
+        std::ifstream in(map_name + ".tri", std::ios::in);
+        std::istreambuf_iterator<char> beg(in), end;
+        std::string strdata(beg, end);
+        triangles = bytes_to_vec<Triangle>(strdata);
+        std::string().swap(strdata);
+        in.close();
+        kd_tree = buildKDTree(triangles);
+        std::vector<Triangle>().swap(triangles);
+
+        auto i_end = std::chrono::steady_clock::now();
+        std::cout << "[MAP] Loaded {" << map_name << "} " << std::chrono::duration<double, std::milli>(i_end - begin).count() << "ms" << std::endl;
+    }
+
+    bool is_visible(Vector ray_origin, Vector ray_end) {
+        return rayIntersectsKDTree(kd_tree, ray_origin, ray_end);
+    }
+};
