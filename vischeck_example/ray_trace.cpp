@@ -19,7 +19,7 @@ int main()
     Vector3D r_end = { 842,440,-193 }; //should be invisible
     Vector3D r_end_2 = { 1131, 404 , -198 };//should be visible
 
-    load_map("inferno", triangles);
+    load_map("mirage", triangles);
     int cnt = 0;
 
     KDNode* kd_tree = buildKDTree(triangles);
