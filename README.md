@@ -37,6 +37,10 @@ typedef struct Triangle {
   3. modify `vphys_parser.cpp` to set the file name of input and output
 ```
 
+## Coding Visibility Check
+A simple example is in `vischeck_example\`
+GPT helped with KD-tree and slabs/moller-trumbore algo
+
 ## TODO
 Nothing.
 
