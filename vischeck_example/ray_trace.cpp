@@ -3,6 +3,9 @@
 
 using namespace std;
 
+Memory csgo = Memory();
+uint64_t client_base;
+
 map_loader map;
 
 bool IsKeyDown(int vk)
@@ -12,19 +15,14 @@ bool IsKeyDown(int vk)
 
 int main()
 {
-    Memory csgo = Memory();
     csgo.open("cs2.exe");
 
-    uint64_t client_base = csgo.get_client_base();
-
-    printf("client.dll: 0x%lx \n", client_base);
+    client_base = csgo.get_client_base();
 
     Vector r_start;
     Vector r_end;
     
     map.load_map("inferno");
-
-    int cnt = 0;
 
     while (true) {
 
@@ -41,14 +39,12 @@ int main()
         auto time_begin = std::chrono::steady_clock::now();
 
         if (map.is_visible(r_start, r_end)) {
-            cout << "INVISIBLE" << endl;
             auto i_end = std::chrono::steady_clock::now();
-            //cout << "TimeCost" << 1000/std::chrono::duration<double, std::milli>(i_end - time_begin).count() << "fps" << endl;
+            cout << "[Invisible]TimeCost" << 1000/std::chrono::duration<double, std::milli>(i_end - time_begin).count() << "fps" << endl;
         }
         else {
             auto time_end = std::chrono::steady_clock::now();
-            cnt++;
-            cout << "Count:" << cnt << " TimeCost" << 1000/std::chrono::duration<double, std::milli>(time_end - time_begin).count() << "fps" << endl;
+            cout << "[Visible] TimeCost" << 1000/std::chrono::duration<double, std::milli>(time_end - time_begin).count() << "fps" << endl;
         }
     }
 
