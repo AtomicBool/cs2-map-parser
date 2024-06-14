@@ -37,14 +37,15 @@ typedef struct Triangle {
   3. modify `vphys_parser.cpp` to set the file name of input and output
 ```
 
-## Coding Visibility Check （not working well)
+## Coding Visibility Check
+!!Start ur game with `-insecure` unless you want VAC!!
 A simple example is in `vischeck_example\` \
 GPT helped with KD-tree and slabs/moller-trumbore algo\
-Otherwise, it takes >1ms to process a path for inferno\
+Otherwise, it takes >1ms to process a ray for inferno
 
 ## TODO
-Fix visibility check
 
 ## Credits
 
 - KV3 Parser https://github.com/joepriit/cpp-kv3-parser
+- Memory Lib https://github.com/pain1929/csgo-game-test/blob/main/handle/
