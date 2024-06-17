@@ -38,7 +38,7 @@ int main()
         
         auto time_begin = std::chrono::steady_clock::now();
 
-        if (map.is_visible(r_start, r_end)) {
+        if (!map.is_visible(r_start, r_end)) {
             auto i_end = std::chrono::steady_clock::now();
             cout << "[Invisible]TimeCost" << 1000/std::chrono::duration<double, std::milli>(i_end - time_begin).count() << "fps" << endl;
         }
