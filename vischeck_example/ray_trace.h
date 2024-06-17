@@ -233,6 +233,6 @@ public:
     }
 
     bool is_visible(Vector ray_origin, Vector ray_end) {
-        return rayIntersectsKDTree(kd_tree, ray_origin, ray_end);
+        return !rayIntersectsKDTree(kd_tree, ray_origin, ray_end);
     }
 };
