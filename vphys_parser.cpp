@@ -112,14 +112,22 @@ int main()
                 }
                 vector<uint8_t>().swap(edges_tmp);
 
-                for (auto edge_index : faces_processed) {
-                    triangles.push_back(
-                        {
-                            vertices[edges_processed[edge_index].origin],
-                            vertices[edges_processed[edges_processed[edge_index].next].origin],
-                            vertices[edges_processed[edges_processed[edge_index].twin].origin],
-                        });
+                // https://unknowncheats.me/fourm/4125372-post78.html/
+                for (auto start_edge : faces_processed) {
+                    int edge = edges_processed[start_edge].next;
+                    while (edge != start_edge) {
+                        int nextEdge = edges_processed[edge].next;
+                        triangles.push_back(
+                            {
+                                vertices[edges_processed[start_edge].origin],
+                                vertices[edges_processed[edge].origin],
+                                vertices[edges_processed[nextEdge].origin]
+                            }
+                        );
+                        edge = nextEdge;
+                    }
                 }
+                
                 vector<uint8_t>().swap(faces_processed);
                 vector<Edge>().swap(edges_processed);
                 vector<Vector3>().swap(vertices);
