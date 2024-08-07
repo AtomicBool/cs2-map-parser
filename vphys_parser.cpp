@@ -1,17 +1,21 @@
-﻿#include "kv3-parser.hpp"
+#include "kv3-parser.hpp"
 #include <fstream>
 #include <stdlib.h>
 #include <chrono>
+#include <filesystem>
+#include <string>
+#include <vector>
+#include <iostream>
+#include <sstream>
+#include <iomanip>
 
 using namespace std;
-
-const char *file_name = "mirage.vphys";
-const char *export_file_name = "mirage.tri";
+namespace fs = std::filesystem;
 
 // credits tni & learn_more (pasted from www.unknowncheats.me/forum/3868338-post34.html)
-#define INRANGE(x,a,b)		(x >= a && x <= b) 
-#define getBits( x )		(INRANGE(x,'0','9') ? (x - '0') : ((x&(~0x20)) - 'A' + 0xa))
-#define get_byte( x )		(getBits(x[0]) << 4 | getBits(x[1]))
+#define INRANGE(x,a,b)      (x >= a && x <= b) 
+#define getBits( x )        (INRANGE(x,'0','9') ? (x - '0') : ((x&(~0x20)) - 'A' + 0xa))
+#define get_byte( x )       (getBits(x[0]) << 4 | getBits(x[1]))
 
 template <typename Ty>
 vector<Ty> bytes_to_vec(const string& bytes)
@@ -70,118 +74,138 @@ typedef struct Edge {
     uint8_t next, twin, origin, face;
 };
 
-c_kv3_parser parser;
-vector<Triangle> triangles;
+vector<string> get_vphys_files() {
+    vector<string> vphys_files;
+    for (const auto& entry : fs::directory_iterator(".")) {
+        if (entry.path().extension() == ".vphys") {
+            vphys_files.push_back(entry.path().string());
+        }
+    }
+    return vphys_files;
+}
 
 int main()
 {
-    ifstream in(file_name, ios::in);
-    istreambuf_iterator<char> beg(in), end;
-    string strdata(beg, end);
-    in.close();
+    vector<string> vphys_files = get_vphys_files();
 
-    parser.parse(strdata);
+    for (const auto& file_name : vphys_files) {
+        string export_file_name = fs::path(file_name).stem().string() + ".tri";
 
-    string().swap(strdata);
+        c_kv3_parser parser;
+        vector<Triangle> triangles;
 
-    int index = 0;
-    int count_hulls = 0;
-    int count_meshes = 0;
+        ifstream in(file_name, ios::in);
+        istreambuf_iterator<char> beg(in), end;
+        string strdata(beg, end);
+        in.close();
 
-    //check hulls 
-    while (true) {
-        string index_str = to_string(index);
-        string collision_index_str = parser.get_value("m_parts[0].m_rnShape.m_hulls[" + index_str + "].m_nCollisionAttributeIndex");
-        if (collision_index_str != "") {
-            int collision_index = atoi(collision_index_str.c_str());
-            if (collision_index == 0) {
-                vector<float> vertex_processed = bytes_to_vec<float>(parser.get_value("m_parts[0].m_rnShape.m_hulls[" + index_str + "].m_Hull.m_Vertices"));
+        parser.parse(strdata);
 
-                vector<Vector3> vertices;
-                for (int i = 0; i < vertex_processed.size(); i += 3) {
-                    vertices.push_back({ vertex_processed[i], vertex_processed[i + 1], vertex_processed[i + 2] });
-                }
-                vector<float>().swap(vertex_processed);
+        string().swap(strdata);
 
-                vector<uint8_t> faces_processed = bytes_to_vec<uint8_t>(parser.get_value("m_parts[0].m_rnShape.m_hulls[" + index_str + "].m_Hull.m_Faces"));
+        int index = 0;
+        int count_hulls = 0;
+        int count_meshes = 0;
 
-                vector<uint8_t> edges_tmp = bytes_to_vec<uint8_t>(parser.get_value("m_parts[0].m_rnShape.m_hulls[" + index_str + "].m_Hull.m_Edges"));
-                vector<Edge> edges_processed;
-                for (int i = 0; i < edges_tmp.size(); i += 4) {
-                    edges_processed.push_back({ edges_tmp[i], edges_tmp[i + 1], edges_tmp[i + 2], edges_tmp[i + 3] });
-                }
-                vector<uint8_t>().swap(edges_tmp);
+        //check hulls 
+        while (true) {
+            string index_str = to_string(index);
+            string collision_index_str = parser.get_value("m_parts[0].m_rnShape.m_hulls[" + index_str + "].m_nCollisionAttributeIndex");
+            if (collision_index_str != "") {
+                int collision_index = atoi(collision_index_str.c_str());
+                if (collision_index == 0) {
+                    vector<float> vertex_processed = bytes_to_vec<float>(parser.get_value("m_parts[0].m_rnShape.m_hulls[" + index_str + "].m_Hull.m_Vertices"));
 
-                // https://unknowncheats.me/fourm/4125372-post78.html/
-                for (auto start_edge : faces_processed) {
-                    int edge = edges_processed[start_edge].next;
-                    while (edge != start_edge) {
-                        int nextEdge = edges_processed[edge].next;
-                        triangles.push_back(
-                            {
-                                vertices[edges_processed[start_edge].origin],
-                                vertices[edges_processed[edge].origin],
-                                vertices[edges_processed[nextEdge].origin]
-                            }
-                        );
-                        edge = nextEdge;
+                    vector<Vector3> vertices;
+                    for (int i = 0; i < vertex_processed.size(); i += 3) {
+                        vertices.push_back({ vertex_processed[i], vertex_processed[i + 1], vertex_processed[i + 2] });
                     }
-                }
-                
-                vector<uint8_t>().swap(faces_processed);
-                vector<Edge>().swap(edges_processed);
-                vector<Vector3>().swap(vertices);
+                    vector<float>().swap(vertex_processed);
 
-                count_hulls++;
+                    vector<uint8_t> faces_processed = bytes_to_vec<uint8_t>(parser.get_value("m_parts[0].m_rnShape.m_hulls[" + index_str + "].m_Hull.m_Faces"));
+
+                    vector<uint8_t> edges_tmp = bytes_to_vec<uint8_t>(parser.get_value("m_parts[0].m_rnShape.m_hulls[" + index_str + "].m_Hull.m_Edges"));
+                    vector<Edge> edges_processed;
+                    for (int i = 0; i < edges_tmp.size(); i += 4) {
+                        edges_processed.push_back({ edges_tmp[i], edges_tmp[i + 1], edges_tmp[i + 2], edges_tmp[i + 3] });
+                    }
+                    vector<uint8_t>().swap(edges_tmp);
+
+                    for (auto start_edge : faces_processed) {
+                        int edge = edges_processed[start_edge].next;
+                        while (edge != start_edge) {
+                            int nextEdge = edges_processed[edge].next;
+                            triangles.push_back(
+                                {
+                                    vertices[edges_processed[start_edge].origin],
+                                    vertices[edges_processed[edge].origin],
+                                    vertices[edges_processed[nextEdge].origin]
+                                }
+                            );
+                            edge = nextEdge;
+                        }
+                    }
+                    vector<uint8_t>().swap(faces_processed);
+                    vector<Edge>().swap(edges_processed);
+                    vector<Vector3>().swap(vertices);
+
+                    count_hulls++;
+                }
             }
-        }
-        else {
-            cout << endl << "Hulls: " << index << " (Total)" << endl;
-            cout << endl << "Founded " << count_hulls << " hulls with tag 0" << endl;
-            break;
-        }
-        index++;
-    }
-
-    //reset index and check meshes
-    index = 0;
-    while (true) {
-        string index_str = to_string(index);
-        string collision_index_str = parser.get_value("m_parts[0].m_rnShape.m_meshes[" + index_str + "].m_nCollisionAttributeIndex");
-        if (collision_index_str != "") {
-            int collision_index = atoi(collision_index_str.c_str());
-            if (collision_index == 0) {
-                vector<int> triangle_processed = bytes_to_vec<int>(parser.get_value("m_parts[0].m_rnShape.m_meshes.[" + index_str + "].m_Mesh.m_Triangles"));
-                vector<float> vertex_processed = bytes_to_vec<float>(parser.get_value("m_parts[0].m_rnShape.m_meshes.[" + index_str + "].m_Mesh.m_Vertices"));
-
-                vector<Vector3> vertices;
-                for (int i = 0; i < vertex_processed.size(); i += 3) {
-                    vertices.push_back({ vertex_processed[i], vertex_processed[i + 1], vertex_processed[i + 2] });
-                }
-                vector<float>().swap(vertex_processed);
-
-                for (int i = 0; i < triangle_processed.size(); i += 3) {
-                    triangles.push_back({ vertices[triangle_processed[i]], vertices[triangle_processed[i + 1]], vertices[triangle_processed[i + 2]] });
-                }
-
-                vector<int>().swap(triangle_processed);
-                vector<Vector3>().swap(vertices);
-
-                count_meshes++;
+            else {
+                cout << endl << "Hulls: " << index << " (Total)" << endl;
+                cout << endl << "Founded " << count_hulls << " hulls with tag 0" << endl;
+                break;
             }
+            index++;
         }
-        else {
-            cout << endl << "Meshes: " << index << " (Total)" << endl;
-            cout << endl << "Founded " << count_meshes << " meshes with tag 0" << endl;
-            break;
+
+        //reset index and check meshes
+        index = 0;
+        while (true) {
+            string index_str = to_string(index);
+            string collision_index_str = parser.get_value("m_parts[0].m_rnShape.m_meshes[" + index_str + "].m_nCollisionAttributeIndex");
+            if (collision_index_str != "") {
+                int collision_index = atoi(collision_index_str.c_str());
+                if (collision_index == 0) {
+                    vector<int> triangle_processed = bytes_to_vec<int>(parser.get_value("m_parts[0].m_rnShape.m_meshes.[" + index_str + "].m_Mesh.m_Triangles"));
+                    vector<float> vertex_processed = bytes_to_vec<float>(parser.get_value("m_parts[0].m_rnShape.m_meshes.[" + index_str + "].m_Mesh.m_Vertices"));
+
+                    vector<Vector3> vertices;
+                    for (int i = 0; i < vertex_processed.size(); i += 3) {
+                        vertices.push_back({ vertex_processed[i], vertex_processed[i + 1], vertex_processed[i + 2] });
+                    }
+                    vector<float>().swap(vertex_processed);
+
+                    for (int i = 0; i < triangle_processed.size(); i += 3) {
+                        triangles.push_back({ vertices[triangle_processed[i]], vertices[triangle_processed[i + 1]], vertices[triangle_processed[i + 2]] });
+                    }
+
+                    vector<int>().swap(triangle_processed);
+                    vector<Vector3>().swap(vertices);
+
+                    count_meshes++;
+                }
+            }
+            else {
+                cout << endl << "Meshes: " << index << " (Total)" << endl;
+                cout << endl << "Founded " << count_meshes << " meshes with tag 0" << endl;
+                break;
+            }
+            index++;
         }
-        index++;
+
+        parser.~c_kv3_parser();
+
+        ofstream out(export_file_name, ios::out);
+        out << vec_to_bytes<Triangle>(triangles);
+
+        cout << "Processed file: " << file_name << " -> " << export_file_name << endl;
+
+        // Clear variables for next iteration
+        triangles.clear();
     }
-
-    parser.~c_kv3_parser();
-
-    ofstream out(export_file_name, ios::out);
-    out << vec_to_bytes<Triangle>(triangles);
 
     system("pause");
+    return 0;
 }
