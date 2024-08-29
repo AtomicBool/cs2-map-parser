@@ -45,6 +45,7 @@ GPT helped with KD-tree and slabs/moller-trumbore algo\
 Otherwise, it takes >1ms to process a ray for inferno
 
 ## TODO
+Save to HEX instead of Text
 
 ## Credits
 
