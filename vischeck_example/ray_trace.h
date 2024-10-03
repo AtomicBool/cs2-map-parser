@@ -10,33 +10,6 @@
 #define getBits( x )		(INRANGE(x,'0','9') ? (x - '0') : ((x&(~0x20)) - 'A' + 0xa))
 #define get_byte( x )		(getBits(x[0]) << 4 | getBits(x[1]))
 
-template <typename Ty>
-std::vector<Ty> bytes_to_vec(const std::string& bytes)
-{
-    const auto num_bytes = bytes.size() / 3;
-    const auto num_elements = num_bytes / sizeof(Ty);
-
-    std::vector<Ty> vec;
-    vec.resize(num_elements + 1);
-
-    const char* p1 = bytes.c_str();
-    uint8_t* p2 = reinterpret_cast<uint8_t*>(vec.data());
-    while (*p1 != '\0')
-    {
-        if (*p1 == ' ')
-        {
-            ++p1;
-        }
-        else
-        {
-            *p2++ = get_byte(p1);
-            p1 += 2;
-        }
-    }
-
-    return vec;
-}
-
 struct BoundingBox {
     Vector min, max;
 
