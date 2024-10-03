@@ -197,8 +197,9 @@ int main()
 
         parser.~c_kv3_parser();
 
-        ofstream out(export_file_name, ios::out);
-        out << vec_to_bytes<Triangle>(triangles);
+        ofstream out(export_file_name, ios::out | ios::binary);
+        out.write(reinterpret_cast<const char*>(triangles.data()), triangles.size() * sizeof(Triangle));
+        out.close();
 
         cout << "Processed file: " << file_name << " -> " << export_file_name << endl;
 
