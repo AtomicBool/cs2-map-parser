@@ -44,36 +44,6 @@ vector<Ty> bytes_to_vec(const string& bytes)
     return vec;
 }
 
-template <typename Ty>
-static string vec_to_bytes(const vector<Ty>& vec)
-{
-    string bytes;
-    for (const auto& element : vec)
-    {
-        const uint8_t* p1 = reinterpret_cast<const uint8_t*>(&element);
-        for (size_t i = 0; i < sizeof(Ty); ++i)
-        {
-            stringstream ss;
-            ss << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(*(p1 + i));
-            bytes += ss.str();
-            bytes += ' '; // Adding spaces
-        }
-    }
-    return bytes;
-}
-
-typedef struct Vector3 {
-    float x, y, z;
-};
-
-typedef struct Triangle {
-    Vector3 p1, p2, p3;
-};
-
-typedef struct Edge {
-    uint8_t next, twin, origin, face;
-};
-
 vector<string> get_vphys_files() {
     vector<string> vphys_files;
     for (const auto& entry : fs::directory_iterator(".")) {
