@@ -219,12 +219,20 @@ public:
     void load_map(std::string map_name) {
         auto begin = std::chrono::steady_clock::now();
 
-        std::ifstream in(map_name + ".tri", std::ios::in);
-        std::istreambuf_iterator<char> beg(in), end;
-        std::string strdata(beg, end);
-        triangles = bytes_to_vec<Triangle>(strdata);
-        std::string().swap(strdata);
+        std::ifstream in(map_name + ".tri", std::ios::in | std::ios::binary);
+
+        in.seekg(0, std::ios::end);
+        std::streamsize fileSize = in.tellg();
+        in.seekg(0, std::ios::beg);
+
+        std::size_t num_elements = fileSize / sizeof(Triangle);
+        triangles.resize(num_elements);
+        if (!in.read(reinterpret_cast<char*>(triangles.data()), fileSize)) {
+            throw std::runtime_error("Failed to read file: " + map_name + ".tri");
+        }
+
         in.close();
+
         kd_tree = buildKDTree(triangles);
         std::vector<Triangle>().swap(triangles);
 
