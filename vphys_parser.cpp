@@ -44,6 +44,16 @@ vector<Ty> bytes_to_vec(const string& bytes)
     return vec;
 }
 
+typedef struct Vector3 {
+    float x, y, z;
+};
+typedef struct Triangle {
+    Vector3 p1, p2, p3;
+};
+typedef struct Edge {
+    uint8_t next, twin, origin, face;
+};
+
 vector<string> get_vphys_files() {
     vector<string> vphys_files;
     for (const auto& entry : fs::directory_iterator(".")) {
