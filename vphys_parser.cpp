@@ -94,7 +94,13 @@ int main()
             if (collision_index_str != "") {
                 int collision_index = atoi(collision_index_str.c_str());
                 if (collision_index == 0) {
-                    vector<float> vertex_processed = bytes_to_vec<float>(parser.get_value("m_parts[0].m_rnShape.m_hulls[" + index_str + "].m_Hull.m_Vertices"));
+                    vector<float> vertex_processed{};
+                    
+                    string vertex_positions_str = parser.get_value("m_parts[0].m_rnShape.m_hulls[" + index_str + "].m_Hull.m_VertexPositions");
+                    if (!vertex_positions_str.empty())
+                       vertex_processed = bytes_to_vec<float>(vertex_positions_str);
+                    else
+                       vertex_processed = bytes_to_vec<float>(parser.get_value("m_parts[0].m_rnShape.m_hulls[" + index_str + "].m_Hull.m_Vertices"));
 
                     vector<Vector3> vertices;
                     for (int i = 0; i < vertex_processed.size(); i += 3) {
