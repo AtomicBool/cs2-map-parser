@@ -154,8 +154,8 @@ int main()
             if (collision_index_str != "") {
                 int collision_index = atoi(collision_index_str.c_str());
                 if (collision_index == 0) {
-                    vector<int> triangle_processed = bytes_to_vec<int>(parser.get_value("m_parts[0].m_rnShape.m_meshes.[" + index_str + "].m_Mesh.m_Triangles"));
-                    vector<float> vertex_processed = bytes_to_vec<float>(parser.get_value("m_parts[0].m_rnShape.m_meshes.[" + index_str + "].m_Mesh.m_Vertices"));
+                    vector<int> triangle_processed = bytes_to_vec<int>(parser.get_value("m_parts[0].m_rnShape.m_meshes[" + index_str + "].m_Mesh.m_Triangles"));
+                    vector<float> vertex_processed = bytes_to_vec<float>(parser.get_value("m_parts[0].m_rnShape.m_meshes[" + index_str + "].m_Mesh.m_Vertices"));
 
                     vector<Vector3> vertices;
                     for (int i = 0; i < vertex_processed.size(); i += 3) {
