@@ -72,7 +72,7 @@ vector<int> get_collision_attribute_indices(c_kv3_parser parser) {
         string index_str = to_string(index);
         string collision_group_string = parser.get_value("m_collisionAttributes[" + index_str + "].m_CollisionGroupString");
         if (collision_group_string != "") {
-            if (collision_group_string == "default" || collision_group_string == "Default") {
+            if (collision_group_string == "\"default\"" || collision_group_string == "\"Default\"") {
                 indices.push_back(index);
             }
         }
@@ -163,7 +163,7 @@ int main()
             }
             else {
                 cout << endl << "Hulls: " << index << " (Total)" << endl;
-                cout << endl << "Founded " << count_hulls << " hulls with tag 0" << endl;
+                cout << endl << "Found " << count_hulls << " hulls with tag 0" << endl;
                 break;
             }
             index++;
@@ -176,7 +176,7 @@ int main()
             string collision_index_str = parser.get_value("m_parts[0].m_rnShape.m_meshes[" + index_str + "].m_nCollisionAttributeIndex");
             if (collision_index_str != "") {
                 int collision_index = atoi(collision_index_str.c_str());
-                if (collision_index == 0) {
+                if (std::find(collision_attribute_indices.begin(), collision_attribute_indices.end(), collision_index) != collision_attribute_indices.end()) {
                     vector<int> triangle_processed = bytes_to_vec<int>(parser.get_value("m_parts[0].m_rnShape.m_meshes[" + index_str + "].m_Mesh.m_Triangles"));
                     vector<float> vertex_processed = bytes_to_vec<float>(parser.get_value("m_parts[0].m_rnShape.m_meshes[" + index_str + "].m_Mesh.m_Vertices"));
 
@@ -198,7 +198,7 @@ int main()
             }
             else {
                 cout << endl << "Meshes: " << index << " (Total)" << endl;
-                cout << endl << "Founded " << count_meshes << " meshes with tag 0" << endl;
+                cout << endl << "Found " << count_meshes << " meshes with tag 0" << endl;
                 break;
             }
             index++;
